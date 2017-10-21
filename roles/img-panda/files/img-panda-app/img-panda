@@ -1,0 +1,57 @@
+#!/usr/bin/python
+
+import os
+import time
+import random
+import BaseHTTPServer
+import json
+import sys
+from os import listdir
+from os.path import isfile, join
+
+CONFIG_FILE = "config.json"
+
+def get_random_image_data():
+    """Choose a random image and encode it"""
+    files = [f for f in listdir(IMAGES_DIRECTORY) if isfile(join(IMAGES_DIRECTORY, f))]
+    file_name = random.choice(files)
+    return open(IMAGES_DIRECTORY + '/' + file_name, 'rb').read().encode('base64').replace('\n', '')
+
+def get_html_image_tag(image_data):
+    """Generate an html tag with the encoded data"""
+    return '<img src="data:image/png;base64,{0}">'.format(image_data)
+
+def get_configs_json_obj(config_file):
+    """Get configs from file to a JSON object"""
+    with open(config_file) as data_file:
+        return json.load(data_file)
+
+class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+   def do_GET(s):
+       """Respond to a GET request."""
+       s.send_response(200)
+       s.send_header("Content-type", "text/html")
+       s.end_headers()
+       s.wfile.write("<html><head><title>Random Panda</title></head>")
+       encoded_image = get_random_image_data()
+       s.wfile.write(get_html_image_tag(encoded_image))
+       s.wfile.write("</body></html>")
+
+if __name__ == '__main__':
+    try:
+        config_obj = get_configs_json_obj(CONFIG_FILE)
+        IMAGES_DIRECTORY = config_obj['images_directory']
+        HOST_NAME = config_obj['host']
+        PORT_NUMBER = int(config_obj['port'])
+    except Exception as err:
+        print "ERROR while parsing config file: [" + CONFIG_FILE + "] caught exception: [" + format(err) + "]"
+        sys.exit(1)
+    server_class = BaseHTTPServer.HTTPServer
+    httpd = server_class((HOST_NAME, PORT_NUMBER), MyHandler)
+    print time.asctime(), "Server Starts - %s:%s" % (HOST_NAME, PORT_NUMBER)
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    httpd.server_close()
+    print time.asctime(), "Server Stops - %s:%s" % (HOST_NAME, PORT_NUMBER)

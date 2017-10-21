@@ -1,0 +1,12 @@
+---
+- name: copy img-panda app
+  copy: src=img-panda-app dest=/tmp/ owner=root group=root mode=0755
+
+- name: stop running img-panda app
+  command: /tmp/img-panda-app/stop_app.sh
+
+- name: start img-panda app
+  command: /tmp/img-panda-app/start_app.sh
+
+- name: verify img-panda app is running
+  command: /tmp/img-panda-app/verify_app.sh

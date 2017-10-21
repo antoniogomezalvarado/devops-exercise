@@ -1,0 +1,12 @@
+---
+- name: copy smart-panda app
+  copy: src=smart-panda-app dest=/tmp/ owner=root group=root mode=0755
+
+- name: stop running smart-panda app
+  command: /tmp/smart-panda-app/stop_app.sh
+
+- name: start smart-panda app
+  command: /tmp/smart-panda-app/start_app.sh
+
+- name: verify smart-panda app is running
+  command: /tmp/smart-panda-app/verify_app.sh

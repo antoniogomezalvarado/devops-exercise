@@ -1,0 +1,50 @@
+#!/usr/bin/python
+
+import os
+import time
+import json
+import sys
+import BaseHTTPServer
+
+CONFIG_FILE = "config.json"
+post_counter = 0
+
+def get_configs_json_obj(config_file):
+	with open(config_file) as data_file:
+	    	return json.load(data_file)
+
+class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+   def do_GET(s):
+       """Respond to a GET request."""
+       global post_counter
+       s.send_response(200)
+       s.send_header("Content-type", "text/html")
+       s.end_headers()
+       s.wfile.write("<html><head><title>POST Counter</title></head>")
+       s.wfile.write("<p>Number of POST requests so far [" + str(post_counter) + "]</p>")
+       s.wfile.write("</body></html>")
+   def do_POST(s):
+       """Respond to a POST request."""
+       global post_counter
+       s.send_response(200)
+       s.send_header("Content-type", "text/html")
+       s.end_headers()
+       post_counter += 1
+
+if __name__ == '__main__':
+    try:
+        config_obj = get_configs_json_obj(CONFIG_FILE)
+        HOST_NAME = config_obj['host']
+        PORT_NUMBER = int(config_obj['port'])
+    except Exception as err:
+        print "ERROR while parsing config file: [" + CONFIG_FILE + "] caught exception: [" + format(err) + "]"
+        sys.exit(1)
+    server_class = BaseHTTPServer.HTTPServer
+    httpd = server_class((HOST_NAME, PORT_NUMBER), MyHandler)
+    print time.asctime(), "Server Starts - %s:%s" % (HOST_NAME, PORT_NUMBER)
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    httpd.server_close()
+    print time.asctime(), "Server Stops - %s:%s" % (HOST_NAME, PORT_NUMBER)
